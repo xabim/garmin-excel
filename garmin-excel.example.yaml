@@ -1,0 +1,26 @@
+# Settings for garmin-excel. Every key is optional; CLI flags override these.
+naming:
+  prefix: RUN
+  week_number_digits: 2
+  day_number_digits: 2
+  language: es
+
+plan:
+  # Either give the date your plan started (any day of its first week) ...
+  start_date: null          # e.g. 2026-10-05
+  # ... or force a week number (wins over start_date).
+  week_number_override: null
+  # Year of the weekly file when the file name has none (e.g. "19_25 oct").
+  year: null
+
+pace:
+  # Used ONLY when the sheet gives one pace instead of a range: target +/- this.
+  tolerance_seconds_per_km: 10
+
+heart_rate:
+  # Same idea for a single HR value in the sheet.
+  tolerance_bpm: 5
+
+# Optional: override the generated workout label for a block label.
+# names:
+#   caminar: Suave

@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+tokens/
+*.token
+.env
+garmin-excel.yaml
