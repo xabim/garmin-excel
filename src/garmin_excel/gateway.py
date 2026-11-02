@@ -23,6 +23,8 @@ class Gateway(Protocol):
     def create(self, payload: dict[str, Any]) -> int: ...
     def update(self, workout_id: int, payload: dict[str, Any]) -> None: ...
     def schedule(self, workout_id: int, day: str) -> None: ...
+    def unschedule(self, scheduled_id: int) -> None: ...
+    def delete(self, workout_id: int) -> None: ...
 
 
 def _lock_down(path: Path) -> None:
@@ -81,3 +83,9 @@ class GarminGateway:
 
     def schedule(self, workout_id: int, day: str) -> None:
         self.api.schedule_workout(workout_id, day)
+
+    def unschedule(self, scheduled_id: int) -> None:
+        self.api.unschedule_workout(scheduled_id)
+
+    def delete(self, workout_id: int) -> None:
+        self.api.delete_workout(workout_id)

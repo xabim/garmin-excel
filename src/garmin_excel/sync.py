@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import date
 from typing import Any
 
 from .gateway import Gateway
@@ -95,3 +97,62 @@ def verify(items: list[PlanItem], gw: Gateway) -> list[str]:
         if wid is None or (wid, i.workout.date.isoformat()) not in sched:
             problems.append(f"{i.workout.name}: not found on {i.workout.date} after upload")
     return problems
+
+
+# ---- list / delete: only workouts created by this tool ---------------------------
+
+
+@dataclass
+class Managed:
+    workout_id: int
+    name: str
+    dates: list[str]
+    scheduled_ids: list[int]
+    result: str = ""
+
+
+def find_managed(gw: Gateway, prefix: str, week: int | None = None, name: str | None = None,
+                 months: list[tuple[int, int]] | None = None) -> list[Managed]:
+    """Workouts whose description carries our tag AND whose name matches the filter.
+
+    Hand-made workouts (no tag) are never returned, so they can never be deleted.
+    """
+    pattern = re.compile(rf"^{re.escape(prefix)} - S{week:02d}D\d+ - " if week is not None else rf"^{re.escape(prefix)} - S\d+D\d+ - ")
+    out: list[Managed] = []
+    for w in gw.list_workouts():
+        n = w.get("workoutName", "")
+        if name is not None and n != name:
+            continue
+        if not pattern.match(n):
+            continue
+        wid = int(w["workoutId"])
+        if hash_from_description(gw.get_workout(wid).get("description")) is None:
+            continue
+        out.append(Managed(wid, n, [], []))
+    if out:
+        by_id = {m.workout_id: m for m in out}
+        for y, mo in months or _default_months():
+            for item in gw.scheduled(y, mo):
+                m = by_id.get(int(item.get("workoutId") or 0))
+                if m:
+                    m.dates.append(item["date"])
+                    if item.get("id"):
+                        m.scheduled_ids.append(int(item["id"]))
+    return sorted(out, key=lambda m: m.name)
+
+
+def _default_months() -> list[tuple[int, int]]:
+    today = date.today()
+    return [((today.year * 12 + today.month - 1 + k) // 12, (today.year * 12 + today.month - 1 + k) % 12 + 1) for k in range(-2, 4)]
+
+
+def delete_managed(items: list[Managed], gw: Gateway) -> None:
+    """Remove calendar entries, then the workout template. Per-item errors are reported."""
+    for m in items:
+        try:
+            for sid in m.scheduled_ids:
+                gw.unschedule(sid)
+            gw.delete(m.workout_id)
+            m.result = "deleted"
+        except Exception as e:
+            m.result = f"FAILED: {type(e).__name__}: {e}"

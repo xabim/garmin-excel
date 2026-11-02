@@ -6,3 +6,8 @@ tokens/
 *.token
 .env
 garmin-excel.yaml
+# never commit plan files or personal data
+*.xlsx
+*.xlsm
+*.xls
+*.csv

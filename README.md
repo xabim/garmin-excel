@@ -19,6 +19,15 @@ uv run garmin-excel upload  --input plan.xlsx --week-number 4 --dry-run # logs i
 uv run garmin-excel upload  --input plan.xlsx --week-number 4          # preview + status + typed "yes" confirmation
 ```
 
+Manage what the tool created (only workouts tagged by this tool; hand-made ones are never touched):
+
+```bash
+uv run garmin-excel list [--week 5]
+uv run garmin-excel delete --week 5 --dry-run   # show what would go
+uv run garmin-excel delete --week 5             # asks you to type 'delete'; also removes their calendar entries
+uv run garmin-excel delete --name "RUN - S05D02 - Caminar"
+```
+
 Flags: `--year` (file names carry no year), `--name-override D06=Controlado` (fix an ambiguous day),
 `--yes` (skip the prompt; never overwrites), `--update-changed` (overwrite existing workouts whose content differs),
 `--config file.yaml`. Copy `garmin-excel.example.yaml` to `garmin-excel.yaml` (git-ignored) for prefix, plan start / week override,

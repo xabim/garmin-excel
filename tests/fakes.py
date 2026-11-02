@@ -25,7 +25,7 @@ class FakeGateway:
         return self.workouts[workout_id]
 
     def scheduled(self, year, month):
-        return [{"itemType": "workout", "workoutId": i, "date": d} for i, d in self.calendar if d.startswith(f"{year}-{month:02d}")]
+        return [{"itemType": "workout", "id": 5000 + i, "workoutId": i, "date": d} for i, d in self.calendar if d.startswith(f"{year}-{month:02d}")]
 
     def create(self, payload):
         self.writes.append(("create", payload["workoutName"]))
@@ -41,3 +41,11 @@ class FakeGateway:
             raise RuntimeError("boom")
         self.writes.append(("schedule", name, day))
         self.calendar.add((workout_id, day))
+
+    def unschedule(self, scheduled_id):
+        self.writes.append(("unschedule", scheduled_id))
+        self.calendar = {(i, d) for i, d in self.calendar if 5000 + i != scheduled_id}
+
+    def delete(self, workout_id):
+        self.writes.append(("delete", self.workouts[workout_id]["workoutName"]))
+        del self.workouts[workout_id]
